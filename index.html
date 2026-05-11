@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torres Residenciales · San José, Costa Rica</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1117;
+  --surface: #16181f;
+  --border: #252830;
+  --text: #e2e4ea;
+  --muted: #666b7a;
+  --accent: #3b82f6;
+  --accent-dark: #1d4ed8;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+#header {
+  padding: 12px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+.header-flag {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.header-text h1 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
+.header-text p {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.header-badge {
+  margin-left: auto;
+  background: rgba(59,130,246,0.15);
+  color: var(--accent);
+  border: 1px solid rgba(59,130,246,0.3);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.06em;
+}
+
+/* ── LAYOUT ── */
+#main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+#map { flex: 1; }
+
+/* ── SIDE PANEL ── */
+#panel {
+  width: 290px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.panel-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-section h3 {
+  font-size: 0.63rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--muted);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* ── YEAR DISPLAY ── */
+.year-display {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.year-sub {
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* ── SLIDER ── */
+.slider-wrapper {
+  position: relative;
+  padding: 4px 0 2px;
+}
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.25), 0 2px 6px rgba(0,0,0,0.4);
+  cursor: grab;
+  transition: box-shadow 0.15s;
+}
+input[type=range]::-webkit-slider-thumb:active { cursor: grabbing; box-shadow: 0 0 0 6px rgba(59,130,246,0.3); }
+input[type=range]::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); border: none;
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.25);
+  cursor: grab;
+}
+.slider-track-fill {
+  position: absolute;
+  top: calc(50% - 1.5px);
+  left: 0;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+
+/* ── PLAY BUTTON ── */
+#play-btn {
+  width: 100%;
+  margin-top: 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 9px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 0.2s, transform 0.1s;
+}
+#play-btn:hover { background: var(--accent-dark); }
+#play-btn:active { transform: scale(0.98); }
+
+/* ── STATS ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.stat-card {
+  background: #1a1d27;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 11px;
+}
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.6rem;
+  color: var(--muted);
+  margin-top: 3px;
+  letter-spacing: 0.04em;
+}
+
+/* ── COLOR TOGGLE ── */
+.toggle-group { display: flex; gap: 5px; }
+.toggle-btn {
+  flex: 1;
+  padding: 7px 8px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+.toggle-btn.active {
+  background: rgba(59,130,246,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.toggle-btn:hover:not(.active) { border-color: #3a3f50; color: var(--text); }
+
+/* ── FILTERS ── */
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+  font-size: 0.74rem;
+  color: var(--text);
+  cursor: pointer;
+}
+.filter-row:last-child { margin-bottom: 0; }
+.filter-row input[type=checkbox] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.filter-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── LEGEND ── */
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  color: var(--text);
+}
+.legend-item:last-child { margin-bottom: 0; }
+.legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── TOWER LIST ── */
+#tower-list {
+  list-style: none;
+  flex: 1;
+}
+.tower-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 9px;
+  border-radius: 7px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  background: #1a1d27;
+  border: 1px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tower-item:hover {
+  border-color: var(--accent);
+  background: rgba(59,130,246,0.06);
+}
+.tower-item-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.tower-item-name {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+}
+.tower-item-info {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.panel-section.list-section { flex: 1; min-height: 0; }
+.list-scroll { overflow-y: auto; max-height: 300px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+/* ── MISSING NOTE ── */
+.missing-note {
+  font-size: 0.64rem;
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.4;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 5px;
+  border: 1px solid var(--border);
+}
+
+/* ── LEAFLET POPUP ── */
+.leaflet-popup-content-wrapper {
+  background: #1a1d27 !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+  min-width: 220px;
+}
+.leaflet-popup-tip-container { display: none; }
+.leaflet-popup-close-button {
+  color: var(--muted) !important;
+  font-size: 1.1rem !important;
+  padding: 8px 10px !important;
+  top: 2px !important;
+  right: 2px !important;
+}
+.leaflet-popup-close-button:hover { color: #fff !important; }
+
+.popup-inner { padding: 14px 16px; }
+.popup-color-bar {
+  height: 4px;
+  border-radius: 12px 12px 0 0;
+  width: 100%;
+}
+.popup-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+.popup-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 5px;
+  font-size: 0.75rem;
+  align-items: flex-start;
+}
+.popup-label { color: var(--muted); min-width: 75px; flex-shrink: 0; }
+.popup-value { color: var(--text); font-weight: 500; line-height: 1.3; }
+.popup-status {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.status-completed { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+.status-construction { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.25); }
+.status-planned { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+.status-unknown { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+
+/* ── PROGRESS BAR ── */
+.progress-bar-wrap {
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  margin: 6px 0 2px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 1px;
+  transition: width 0.4s ease;
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="header-flag">🇨🇷</div>
+  <div class="header-text">
+    <h1>Torres Residenciales · San José, Costa Rica</h1>
+    <p>Expansión urbana vertical · Registro en progreso</p>
+  </div>
+  <div class="header-badge">SJO · 2005–2028</div>
+</div>
+
+<div id="main">
+  <div id="map"></div>
+
+  <div id="panel">
+
+    <!-- TIME SLIDER -->
+    <div class="panel-section">
+      <h3>Escala de tiempo</h3>
+      <div class="year-display" id="year-display">2010</div>
+      <div class="year-sub">Mostrando torres completadas hasta este año</div>
+      <div class="slider-wrapper">
+        <div class="slider-track-fill" id="track-fill" style="width:21.7%"></div>
+        <input type="range" id="year-slider" min="2005" max="2028" value="2010">
+      </div>
+      <div class="slider-labels"><span>2005</span><span>2010</span><span>2015</span><span>2020</span><span>2028</span></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:21.7%"></div></div>
+      <button id="play-btn">▶ &nbsp;Reproducir animación</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="panel-section">
+      <h3>Estadísticas · <span id="stats-year">2010</span></h3>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-label">COMPLETADAS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-m2">—</div>
+          <div class="stat-label">MILES M² ACUM.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-construction">—</div>
+          <div class="stat-label">EN CONSTRUCCIÓN</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-planned">—</div>
+          <div class="stat-label">PLANIFICADAS</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLOR MODE -->
+    <div class="panel-section">
+      <h3>Color por</h3>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btn-barrio" onclick="setColorMode('barrio')">Zona / Barrio</button>
+        <button class="toggle-btn" id="btn-developer" onclick="setColorMode('developer')">Inmobiliaria</button>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="panel-section">
+      <h3>Mostrar en el mapa</h3>
+      <label class="filter-row">
+        <input type="checkbox" id="f-completed" checked onchange="updateMap()">
+        <span class="filter-dot" style="background:#4ade80"></span>
+        Completadas (por año)
+      </label>
+      <label class="filter-row">
+        <input type="checkbox" id="f-construction" checked onchange="updateMap()">
+        <span class="filter-dot" style="background:#fb923c;opacity:0.7"></span>
+        En construcción
+      </label>
+      <label class="filter-row">
+        <input type="checkbox" id="f-planned" checked onchange="updateMap()">
+        <span class="filter-dot" style="background:transparent;border:2px solid #a78bfa;width:10px;height:10px;border-radius:50%"></span>
+        Planificadas / futuras
+      </label>
+      <label class="filter-row">
+        <input type="checkbox" id="f-unknown" checked onchange="updateMap()">
+        <span class="filter-dot" style="background:#475569"></span>
+        Sin fecha disponible
+      </label>
+    </div>
+
+    <!-- STATUS LEGEND -->
+    <div class="panel-section">
+      <h3>Simbología de estado</h3>
+      <div class="legend-item">
+        <svg width="11" height="11"><circle cx="5.5" cy="5.5" r="5" fill="#4ade80"/></svg>
+        Completada (círculo lleno)
+      </div>
+      <div class="legend-item">
+        <svg width="11" height="11"><circle cx="5.5" cy="5.5" r="4" fill="#fb923c" stroke="#fb923c" stroke-width="1" stroke-dasharray="2,1.5" fill-opacity="0.5"/></svg>
+        En construcción (borde discontinuo)
+      </div>
+      <div class="legend-item">
+        <svg width="11" height="11"><circle cx="5.5" cy="5.5" r="4" fill="transparent" stroke="#a78bfa" stroke-width="1.5"/></svg>
+        Planificada (sin relleno)
+      </div>
+      <div class="legend-item">
+        <svg width="11" height="11"><circle cx="5.5" cy="5.5" r="5" fill="#475569" opacity="0.4"/></svg>
+        Sin fecha / sin datos
+      </div>
+      <div class="legend-item" style="margin-top:6px;font-size:0.65rem;color:var(--muted)">
+        <svg width="11" height="11"><circle cx="5.5" cy="5.5" r="3.5" fill="white" opacity="0.3"/><circle cx="5.5" cy="5.5" r="5.5" fill="transparent" stroke="white" stroke-width="0.5" stroke-opacity="0.3"/></svg>
+        Tamaño proporcional a m²
+      </div>
+      <div id="legend-colors" style="margin-top:12px; border-top:1px solid var(--border); padding-top:12px;"></div>
+    </div>
+
+    <!-- TOWER LIST -->
+    <div class="panel-section list-section">
+      <h3>Torres visibles (<span id="list-count">0</span>)</h3>
+      <div class="list-scroll">
+        <ul id="tower-list"></ul>
+      </div>
+      <div class="missing-note" id="missing-note">
+        ⚠ 7 torres sin coordenadas no se muestran en el mapa: URBN Nunciatura, SOY Escalante, El Respiro, Balconnia, Trí-o, Trillium, CENTRIC.
+      </div>
+    </div>
+
+  </div><!-- /panel -->
+</div><!-- /main -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ================================================================
+// DATA
+// ================================================================
+const towers = [
+  // ── COMPLETADAS (año conocido) ──
+  { name:"Vista del Parque", dev:"Grupo Inmobiliario del Parque", lat:9.934907359835966, lng:-84.11040381254931, barrio:"La Sabana", year:2005, yearRaw:"2005", status:"completed", m2:9366, notes:"Una de las empresas pioneras en la construcción de torres de apartamentos." },
+  { name:"Altos de Nunciatura", dev:"Argo Estrategia / Volio y Trejos", lat:9.938700575461986, lng:-84.11057225976963, barrio:"Rohrmoser / Nunciatura", year:2008, yearRaw:"2008", status:"completed", m2:13125, notes:"" },
+  { name:"Metropolitan Tower", dev:"Guidi Estructurales", lat:9.935632719649272, lng:-84.11019259535715, barrio:"La Sabana", year:2010, yearRaw:"2010", status:"completed", m2:26800, notes:"" },
+  { name:"Torres del Lago", dev:"Grupo LX Inmobiliaria CR", lat:9.932407018909142, lng:-84.1038740616193, barrio:"La Sabana", year:2010, yearRaw:"2010", status:"completed", m2:38083, notes:"" },
+  { name:"Urbano Nunciatura", dev:"Eco Quintas / Edificar", lat:9.93850118613748, lng:-84.11192087326273, barrio:"Rohrmoser / Nunciatura", year:2012, yearRaw:"2012", status:"completed", m2:10491, notes:"" },
+  { name:"Le Parc Nunciatura", dev:"Eco Quintas / Edificar", lat:9.938934507515095, lng:-84.11199308860527, barrio:"Rohrmoser / Nunciatura", year:2012, yearRaw:"2012", status:"completed", m2:6097, notes:"" },
+  { name:"Vistas de Nunciatura", dev:"Grupo Leumi", lat:9.939902378224424, lng:-84.11212377511227, barrio:"Rohrmoser / Nunciatura", year:2013, yearRaw:"2013", status:"completed", m2:21967, notes:"" },
+  { name:"Paradisus (2 torres)", dev:"ConstruReal / Consultora Vector", lat:9.952636575965688, lng:-84.1219664519809, barrio:"Pavas", year:2013, yearRaw:"2013", status:"completed", m2:55612, notes:"" },
+  { name:"Nunciatura Flats", dev:"Civitar Desarrolladores / Volio y Trejos", lat:9.940769113227129, lng:-84.11276661744094, barrio:"Rohrmoser / Nunciatura", year:2015, yearRaw:"2015", status:"completed", m2:10171, notes:"" },
+  { name:"Q-Bo Skyhomes", dev:"H Solís", lat:9.942596470322515, lng:-84.11625554812609, barrio:"Rohrmoser / Nunciatura", year:2017, yearRaw:"2017", status:"completed", m2:50000, notes:"" },
+  { name:"Torre Rohrmoser", dev:"Grupo Leumi", lat:9.94074874216811, lng:-84.10852243278352, barrio:"Rohrmoser / Nunciatura", year:2017, yearRaw:"2017", status:"completed", m2:14470, notes:"" },
+  { name:"Nest Freses", dev:"BEE", lat:9.927108513256078, lng:-84.0399421751124, barrio:"Curridabat", year:2017, yearRaw:"2017", status:"completed", m2:13897, notes:"Empresa Colombiana, empezó con torres en el Poblado en los 80s." },
+  { name:"Condominio Vertical UNO", dev:"Jaime Rouillón Arquitectura", lat:9.940764248767872, lng:-84.11592553093399, barrio:"Rohrmoser / Nunciatura", year:2017, yearRaw:"2017", status:"completed", m2:3600, notes:"" },
+  { name:"Torre W", dev:"DWL Desarrollando el Futuro", lat:9.939337378571976, lng:-84.11419147696182, barrio:"La Sabana", year:2017, yearRaw:"2017", status:"completed", m2:6565, notes:"" },
+  { name:"Alma de Escalante", dev:"Alma Soluciones Inmobiliarias", lat:9.937229076224222, lng:-84.06187064442707, barrio:"Escalante", year:2017, yearRaw:"2017", status:"completed", m2:5976, notes:"" },
+  { name:"Ü Nunciatura", dev:"Civitar Desarrolladores / Volio y Trejos", lat:9.940272949133558, lng:-84.11295894442705, barrio:"Rohrmoser / Nunciatura", year:2018, yearRaw:"2018", status:"completed", m2:26000, notes:"" },
+  { name:"Hyde Park Nunciatura", dev:"Argo Estrategia / Volio y Trejos", lat:9.938284654162722, lng:-84.11144925976969, barrio:"Rohrmoser / Nunciatura", year:2018, yearRaw:"2018", status:"completed", m2:11970, notes:"" },
+  { name:"Vía 74", dev:"JKL Desarrolladora", lat:9.93800456815513, lng:-84.11269444502486, barrio:"Rohrmoser / Nunciatura", year:2018, yearRaw:"2018", status:"completed", m2:8334, notes:"" },
+  { name:"URBN Escalante", dev:"CORE", lat:9.933328570632396, lng:-84.0657758886053, barrio:"Escalante", year:2019, yearRaw:"2019", status:"completed", m2:40937, notes:"100% vendido" },
+  { name:"TriBca The Natural Urban Home", dev:"Argo Estrategia", lat:9.941989215585574, lng:-84.11514708860527, barrio:"Rohrmoser / Nunciatura", year:2019, yearRaw:"2019", status:"completed", m2:13454, notes:"" },
+  { name:"iFreses", dev:"Civitar Desarrolladores / Volio y Trejos", lat:9.92746128587195, lng:-84.04024984627665, barrio:"Curridabat", year:2019, yearRaw:"2019", status:"completed", m2:24444, notes:"" },
+  { name:"Iconnia Sabana Norte (2 torres)", dev:"Furoiani", lat:9.941773554242255, lng:-84.10584174896495, barrio:"La Sabana", year:2019, yearRaw:"2019", status:"completed", m2:22750, notes:"Empresa Ecuatoriana." },
+  { name:"Cosmopolitan Tower", dev:"CORE", lat:9.939536007222902, lng:-84.11397823093404, barrio:"Rohrmoser / Nunciatura", year:2020, yearRaw:"2020", status:"completed", m2:20000, notes:"100% vendido" },
+  { name:"Torre ONE Rohrmoser", dev:"Grupo Leumi", lat:9.942424547531811, lng:-84.11667998860528, barrio:"Rohrmoser / Nunciatura", year:2020, yearRaw:"2020", status:"completed", m2:6939, notes:"" },
+  { name:"SECRT Sabana", dev:"CORE", lat:9.929889656858839, lng:-84.1014812616193, barrio:"La Sabana", year:2021, yearRaw:"2021", status:"completed", m2:39125, notes:"" },
+  { name:"Gardenia", dev:"Studio Saxe", lat:9.939396878201867, lng:-84.11217115130822, barrio:"Rohrmoser / Nunciatura", year:2021, yearRaw:"2021", status:"completed", m2:5544, notes:"" },
+  { name:"Elysian Nunciatura", dev:"Argo Estrategia", lat:9.94009835294315, lng:-84.11152429963911, barrio:"Rohrmoser / Nunciatura", year:2021, yearRaw:"2021", status:"completed", m2:13697, notes:"" },
+  { name:"NoTa Escalante", dev:"BEE", lat:9.938718236292987, lng:-84.06237393278361, barrio:"Escalante", year:2021, yearRaw:"2021", status:"completed", m2:6244, notes:"Empresa Colombiana." },
+  { name:"Torre Los Yoses", dev:"Grupo Inmobiliario del Parque", lat:9.93255508684233, lng:-84.0616506020984, barrio:"Los Yoses", year:2022, yearRaw:"2022", status:"completed", m2:36102, notes:"" },
+  { name:"Núcleo Sabana (Torres A y B)", dev:"RC Inmobiliaria", lat:9.943377573038463, lng:-84.09678321744092, barrio:"La Sabana", year:2022, yearRaw:"2022 (A) · 2024 (B)", status:"completed", m2:90000, notes:"Torres C y D bajo construcción. Vínculo con Rutas Naturbanas." },
+  { name:"Sky Garden Nunciatura", dev:"Citizen Inmobiliaria", lat:9.940869638178862, lng:-84.11317181805622, barrio:"Rohrmoser / Nunciatura", year:2023, yearRaw:"2023", status:"completed", m2:27120, notes:"Narrativas verdes." },
+  { name:"Aire Nunciatura", dev:"Argo Estrategia", lat:9.938971182275688, lng:-84.11042447511224, barrio:"Rohrmoser / Nunciatura", year:2023, yearRaw:"2023", status:"completed", m2:11827, notes:"" },
+  { name:"Bö Escalante", dev:"Citizen Inmobiliaria", lat:9.935283577231788, lng:-84.0646115904549, barrio:"Escalante", year:2024, yearRaw:"2024", status:"completed", m2:16904, notes:"" },
+  { name:"SER Escalante", dev:"Civitar Desarrolladores / Volio y Trejos", lat:9.934977013298589, lng:-84.06515511559141, barrio:"Escalante", year:2024, yearRaw:"2024", status:"completed", m2:10800, notes:"" },
+  { name:"SoHo Paradisus (2 torres)", dev:"ConstruReal / Consultora Vector", lat:9.95384363292473, lng:-84.1220382174408, barrio:"Pavas", year:2024, yearRaw:"2024", status:"completed", m2:null, notes:"" },
+  { name:"SECRT Escalante", dev:"CORE", lat:9.93176245964735, lng:-84.06360158860541, barrio:"Escalante", year:2025, yearRaw:"mediados 2025", status:"completed", m2:14412, notes:"100% vendido" },
+  { name:"BABYLON Rohrmoser", dev:"CORE", lat:9.942472015210516, lng:-84.11173654442709, barrio:"Rohrmoser / Nunciatura", year:2025, yearRaw:"entrega 2025", status:"completed", m2:16571, notes:"Inspirado en los Jardines de Babilonia." },
+  { name:"Silentia", dev:"Civitar Desarrolladores / Volio y Trejos", lat:9.940693584621176, lng:-84.11648545302809, barrio:"Rohrmoser / Nunciatura", year:2025, yearRaw:"julio 2025", status:"completed", m2:11780, notes:"" },
+  { name:"Aterego Nunciatura", dev:"Argo Estrategia", lat:9.938381904255058, lng:-84.11240734812613, barrio:"Rohrmoser / Nunciatura", year:2025, yearRaw:"2025", status:"completed", m2:9566, notes:"" },
+  { name:"Velo Nunciatura", dev:"Avance Ingenieros", lat:9.94131336708782, lng:-84.11294627992973, barrio:"Rohrmoser / Nunciatura", year:2025, yearRaw:"~2025", status:"completed", m2:26315, notes:"" },
+  { name:"Den7", dev:"Grupo Saxum / Consultora Vector", lat:9.936111852230527, lng:-84.05793444627662, barrio:"Barrio Dent", year:2025, yearRaw:"casi completado 2025", status:"completed", m2:null, notes:"Proyecto sostenible con concepto de Biofilia." },
+
+  // ── EN CONSTRUCCIÓN (sin año de entrega definido) ──
+  { name:"Azenza Towers", dev:"Garnier & Garnier", lat:9.945802706989605, lng:-84.1028789886053, barrio:"La Uruca", year:2025, yearRaw:"una torre completa 2025", status:"construction", m2:40000, notes:"Vínculo con Rutas Naturbanas. Colinda con Río Torres." },
+  { name:"Latitud Don Bosco", dev:"Grupo Inmobiliario del Parque", lat:9.931958449356308, lng:-84.09232973026954, barrio:"Centro SJO", year:null, yearRaw:"bajo construcción", status:"construction", m2:17944, notes:"" },
+  { name:"The Point Nunciatura", dev:"Grupo Inmobiliario del Parque", lat:9.940322995747913, lng:-84.113482744154, barrio:"Rohrmoser / Nunciatura", year:null, yearRaw:"bajo construcción", status:"construction", m2:null, notes:"" },
+  { name:"Dunna Nunciatura", dev:"Argo Estrategia", lat:9.938838178878992, lng:-84.11410288860529, barrio:"Rohrmoser / Nunciatura", year:null, yearRaw:"bajo construcción", status:"construction", m2:null, notes:"" },
+  { name:"Parkwood Nunciatura", dev:"DM Desarrollos Mega", lat:9.939622436519247, lng:-84.11236239833217, barrio:"Rohrmoser / Nunciatura", year:null, yearRaw:"bajo construcción", status:"construction", m2:15573, notes:"Vistas al Parque del Perú." },
+  { name:"137 Aleste", dev:"Portafolio Inmobiliario", lat:9.915134587655963, lng:-84.0153007616194, barrio:"Curridabat", year:null, yearRaw:"bajo construcción", status:"construction", m2:46523, notes:"Narrativas verdes. Colinda con Río María Aguilar." },
+  { name:"@dent", dev:"Portafolio Inmobiliario", lat:9.93805119340146, lng:-84.05670032183832, barrio:"Barrio Dent", year:null, yearRaw:"bajo construcción", status:"construction", m2:68608, notes:"Narrativas verdes. Masterplan de 4 edificios por etapas. Junto a Quebrada los Negritos." },
+  { name:"Escalante Verde", dev:"Grupo Inmobiliario del Parque", lat:9.938277147072244, lng:-84.06281314627662, barrio:"Escalante", year:null, yearRaw:"bajo construcción", status:"construction", m2:null, notes:"Controversial por inundaciones y permisos de viabilidad ambiental." },
+  { name:"Skyhouse", dev:"RC Inmobiliaria", lat:9.909462844647406, lng:-84.07995466810144, barrio:"La Guacamaya", year:null, yearRaw:"bajo construcción", status:"construction", m2:null, notes:"Bandera Azul Construcción Sostenible." },
+  { name:"Núcleo Sabana (Torres C y D)", dev:"RC Inmobiliaria", lat:9.9437, lng:-84.0975, barrio:"La Sabana", year:null, yearRaw:"bajo construcción", status:"construction", m2:null, notes:"Vínculo con Rutas Naturbanas." },
+
+  // ── PLANIFICADAS / FUTURAS ──
+  { name:"URBN Nunciatura", dev:"CORE", lat:9.9335, lng:-84.1058, barrio:"Rohrmoser / Nunciatura", year:2027, yearRaw:"construcción iniciada mayo 2025, estimada 2027", status:"planned", m2:null, notes:"Coordenadas aproximadas — aún sin georreferencia precisa." },
+  { name:"Sky Garden Sabana", dev:"Citizen Inmobiliaria", lat:9.939600383033182, lng:-84.10394200605833, barrio:"La Sabana", year:2026, yearRaw:"2026", status:"planned", m2:null, notes:"" },
+  { name:"Scape Sabana", dev:"Grupo Saxum / Consultora Vector", lat:9.93751654394708, lng:-84.11060587511234, barrio:"La Sabana", year:2026, yearRaw:"~2026", status:"planned", m2:10433, notes:"" },
+  { name:"Aranjuez23", dev:"UDI Group", lat:9.93710518360413, lng:-84.06693038860539, barrio:"Aranjuez", year:2026, yearRaw:"~2026", status:"planned", m2:17120, notes:"Inmobiliaria de República Checa." },
+  { name:"The Jane", dev:"DWL Desarrollando el Futuro", lat:9.94120131991455, lng:-84.10931318478394, barrio:"La Sabana", year:2026, yearRaw:"~2026", status:"planned", m2:null, notes:"Inspirado en la urbanista Jane Jacobs." },
+  { name:"BLVD Sabana", dev:"Portafolio Inmobiliario", lat:9.938245811394435, lng:-84.09887817511226, barrio:"La Sabana", year:null, yearRaw:"sin empezar", status:"planned", m2:null, notes:"" },
+
+  // ── SIN FECHA / SIN DATOS ──
+  { name:"SIIX", dev:"CORE", lat:9.939227588931825, lng:-84.11426735487767, barrio:"Rohrmoser / Nunciatura", year:null, yearRaw:"", status:"unknown", m2:null, notes:"" },
+  { name:"Nueve84", dev:"Portafolio Inmobiliario", lat:9.925070282459556, lng:-84.01741852203979, barrio:"Curridabat", year:null, yearRaw:"", status:"unknown", m2:null, notes:"" },
+  { name:"Emblema Zapote", dev:"RC Inmobiliaria", lat:9.92107352139132, lng:-84.0587139039481, barrio:"Zapote", year:null, yearRaw:"", status:"unknown", m2:null, notes:"" },
+  { name:"Zafiro Nunciatura", dev:"Parkside Inmobiliaria", lat:9.938805441295893, lng:-84.1124995777039, barrio:"Rohrmoser / Nunciatura", year:null, yearRaw:"", status:"unknown", m2:null, notes:"" },
+  { name:"Trópica Nunciatura", dev:"Genera", lat:9.938960232175278, lng:-84.11195781132862, barrio:"Rohrmoser / Nunciatura", year:null, yearRaw:"", status:"unknown", m2:null, notes:"El primer edificio de más de 20 pisos frente al Parque del Perú." },
+];
+
+// ================================================================
+// COLOR PALETTES
+// ================================================================
+const barrioColors = {
+  "La Sabana":              "#3b82f6",
+  "Rohrmoser / Nunciatura": "#a855f7",
+  "Escalante":              "#ef4444",
+  "Los Yoses":              "#f97316",
+  "Curridabat":             "#22c55e",
+  "Barrio Dent":            "#92400e",
+  "La Uruca":               "#06b6d4",
+  "Pavas":                  "#ec4899",
+  "Zapote":                 "#eab308",
+  "La Guacamaya":           "#84cc16",
+  "Aranjuez":               "#ff7043",
+  "Centro SJO":             "#78909c",
+};
+
+const devPalette = ["#f87171","#fb923c","#fbbf24","#a3e635","#34d399","#22d3ee","#60a5fa","#a78bfa","#f472b6","#e879f9","#2dd4bf","#facc15","#4ade80","#38bdf8","#c084fc","#f9a8d4","#86efac","#93c5fd","#fca5a5","#fdba74"];
+const devColors = {};
+[...new Set(towers.map(t => t.dev))].forEach((d, i) => { devColors[d] = devPalette[i % devPalette.length]; });
+
+function getColor(t) {
+  return colorMode === 'barrio' ? (barrioColors[t.barrio] || '#888') : (devColors[t.dev] || '#888');
+}
+
+// ================================================================
+// MAP
+// ================================================================
+const map = L.map('map', { center:[9.9355, -84.092], zoom:14 });
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, © <a href="https://carto.com/">CARTO</a>',
+  maxZoom: 19, subdomains: 'abcd'
+}).addTo(map);
+
+// ================================================================
+// STATE
+// ================================================================
+let colorMode = 'barrio';
+let currentYear = 2010;
+let playInterval = null;
+const activeMarkers = {};
+
+// ================================================================
+// RADIUS
+// ================================================================
+function getRadius(t) {
+  if (!t.m2) return 7;
+  return Math.max(6, Math.min(22, 3 + Math.sqrt(t.m2 / 1500)));
+}
+
+// ================================================================
+// VISIBILITY LOGIC
+// ================================================================
+function shouldShow(t, year) {
+  const fC  = document.getElementById('f-completed').checked;
+  const fCo = document.getElementById('f-construction').checked;
+  const fP  = document.getElementById('f-planned').checked;
+  const fU  = document.getElementById('f-unknown').checked;
+
+  if (t.status === 'completed')    return fC  && t.year <= year;
+  if (t.status === 'construction') return fCo;
+  if (t.status === 'planned')      return fP;
+  if (t.status === 'unknown')      return fU;
+  return false;
+}
+
+// ================================================================
+// CREATE MARKER
+// ================================================================
+function makeMarker(t) {
+  const color = getColor(t);
+  const r = getRadius(t);
+  let opts;
+  if (t.status === 'completed') {
+    opts = { radius:r, color:color, fillColor:color, fillOpacity:0.82, weight:1, opacity:1 };
+  } else if (t.status === 'construction') {
+    opts = { radius:r, color:color, fillColor:color, fillOpacity:0.4, weight:2, opacity:0.85, dashArray:'4 3' };
+  } else if (t.status === 'planned') {
+    opts = { radius:r, color:color, fillColor:'transparent', fillOpacity:0, weight:2, opacity:0.7 };
+  } else {
+    opts = { radius:r, color:'#475569', fillColor:'#475569', fillOpacity:0.25, weight:1, opacity:0.5 };
+  }
+
+  const marker = L.circleMarker([t.lat, t.lng], opts);
+
+  const statusLabel = { completed:'Completada', construction:'En construcción', planned:'Planificada', unknown:'Sin datos' };
+  const statusCls   = { completed:'status-completed', construction:'status-construction', planned:'status-planned', unknown:'status-unknown' };
+  const m2str = t.m2 ? t.m2.toLocaleString('es') + ' m²' : 'No disponible';
+
+  marker.bindPopup(`
+    <div class="popup-color-bar" style="background:${color}"></div>
+    <div class="popup-inner">
+      <div class="popup-name">${t.name}</div>
+      <div class="popup-row"><span class="popup-label">Inmobiliaria</span><span class="popup-value">${t.dev}</span></div>
+      <div class="popup-row"><span class="popup-label">Zona</span><span class="popup-value">${t.barrio}</span></div>
+      <div class="popup-row"><span class="popup-label">Año</span><span class="popup-value">${t.yearRaw || '–'}</span></div>
+      <div class="popup-row"><span class="popup-label">Área total</span><span class="popup-value">${m2str}</span></div>
+      ${t.notes ? `<div class="popup-row"><span class="popup-label">Notas</span><span class="popup-value">${t.notes}</span></div>` : ''}
+      <div><span class="popup-status ${statusCls[t.status]}">${statusLabel[t.status]}</span></div>
+    </div>
+  `, { maxWidth:300 });
+
+  return marker;
+}
+
+// ================================================================
+// UPDATE MAP & PANEL
+// ================================================================
+function updateMap() {
+  // Clear existing markers
+  Object.values(activeMarkers).forEach(m => { if (map.hasLayer(m)) map.removeLayer(m); });
+  Object.keys(activeMarkers).forEach(k => delete activeMarkers[k]);
+
+  const visible = [];
+
+  towers.forEach((t, i) => {
+    if (shouldShow(t, currentYear)) {
+      const m = makeMarker(t);
+      m.addTo(map);
+      activeMarkers[i] = m;
+      visible.push({ t, i });
+    }
+  });
+
+  // Stats
+  const completed     = visible.filter(v => v.t.status === 'completed');
+  const construction  = visible.filter(v => v.t.status === 'construction');
+  const planned       = visible.filter(v => v.t.status === 'planned');
+  const totalM2       = completed.reduce((s, v) => s + (v.t.m2 || 0), 0);
+
+  document.getElementById('stat-total').textContent       = completed.length;
+  document.getElementById('stat-m2').textContent          = totalM2 > 0 ? (totalM2 / 1000).toFixed(0) + 'k' : '–';
+  document.getElementById('stat-construction').textContent = construction.length;
+  document.getElementById('stat-planned').textContent     = planned.length;
+  document.getElementById('stats-year').textContent       = currentYear;
+  document.getElementById('list-count').textContent       = visible.length;
+
+  // Tower list
+  const list = document.getElementById('tower-list');
+  list.innerHTML = '';
+  visible
+    .sort((a, b) => (a.t.year || 9999) - (b.t.year || 9999))
+    .forEach(({ t, i }) => {
+      const li = document.createElement('li');
+      li.className = 'tower-item';
+      const c = getColor(t);
+      li.innerHTML = `
+        <div class="tower-item-dot" style="background:${c}"></div>
+        <div>
+          <div class="tower-item-name">${t.name}</div>
+          <div class="tower-item-info">${t.barrio} · ${t.yearRaw || '–'}</div>
+        </div>`;
+      li.addEventListener('click', () => {
+        if (activeMarkers[i]) {
+          map.setView([t.lat, t.lng], 16, { animate:true });
+          setTimeout(() => activeMarkers[i].openPopup(), 350);
+        }
+      });
+      list.appendChild(li);
+    });
+
+  updateLegend();
+}
+
+// ================================================================
+// LEGEND
+// ================================================================
+function updateLegend() {
+  const container = document.getElementById('legend-colors');
+  container.innerHTML = '';
+  if (colorMode === 'barrio') {
+    Object.entries(barrioColors).forEach(([name, color]) => {
+      if (towers.some(t => t.barrio === name)) {
+        container.innerHTML += `<div class="legend-item">
+          <div class="legend-dot" style="background:${color}"></div>
+          <span>${name}</span>
+        </div>`;
+      }
+    });
+  } else {
+    [...new Set(towers.map(t => t.dev))].forEach(dev => {
+      container.innerHTML += `<div class="legend-item">
+        <div class="legend-dot" style="background:${devColors[dev]}"></div>
+        <span style="font-size:0.67rem">${dev}</span>
+      </div>`;
+    });
+  }
+}
+
+// ================================================================
+// COLOR MODE
+// ================================================================
+function setColorMode(mode) {
+  colorMode = mode;
+  document.getElementById('btn-barrio').classList.toggle('active', mode === 'barrio');
+  document.getElementById('btn-developer').classList.toggle('active', mode === 'developer');
+  updateMap();
+}
+
+// ================================================================
+// SLIDER
+// ================================================================
+const slider = document.getElementById('year-slider');
+const yearDisplay = document.getElementById('year-display');
+const trackFill   = document.getElementById('track-fill');
+const progressFill = document.getElementById('progress-fill');
+
+function setYear(y) {
+  currentYear = y;
+  slider.value = y;
+  yearDisplay.textContent = y;
+  const pct = ((y - 2005) / (2028 - 2005) * 100).toFixed(1) + '%';
+  trackFill.style.width = pct;
+  progressFill.style.width = pct;
+  updateMap();
+}
+
+slider.addEventListener('input', () => setYear(parseInt(slider.value)));
+
+// ================================================================
+// PLAY ANIMATION
+// ================================================================
+const playBtn = document.getElementById('play-btn');
+playBtn.addEventListener('click', () => {
+  if (playInterval) {
+    clearInterval(playInterval);
+    playInterval = null;
+    playBtn.textContent = '▶  Reproducir animación';
+    return;
+  }
+  if (currentYear >= 2028) setYear(2005);
+  playBtn.textContent = '⏸  Pausar';
+
+  playInterval = setInterval(() => {
+    const next = currentYear + 1;
+    setYear(next);
+    if (next >= 2028) {
+      clearInterval(playInterval);
+      playInterval = null;
+      playBtn.textContent = '▶  Reproducir animación';
+    }
+  }, 900);
+});
+
+// ================================================================
+// INIT
+// ================================================================
+setYear(2010);
+</script>
+</body>
+</html>
