@@ -29,9 +29,9 @@
   content:'';
   position:absolute; inset:0;
   background-image:
-    linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(59,130,246,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
   pointer-events:none;
 }
 
@@ -39,44 +39,47 @@
 #login-screen::after {
   content:'';
   position:absolute; inset:0;
-  background: radial-gradient(ellipse 70% 60% at 30% 50%, rgba(59,130,246,0.08) 0%, transparent 70%),
-              radial-gradient(ellipse 50% 40% at 75% 30%, rgba(168,85,247,0.05) 0%, transparent 60%);
+  background: radial-gradient(ellipse 80% 60% at 50% 42%, rgba(59,130,246,0.09) 0%, transparent 70%);
   pointer-events:none;
 }
 
 .login-body {
   flex:1; display:flex; align-items:center; justify-content:center;
-  gap:60px; padding:40px; position:relative; z-index:1;
+  padding:40px 24px; position:relative; z-index:1;
 }
 
-/* ── LEFT PANEL ── */
-.login-left {
-  flex:1; max-width:520px; display:flex; flex-direction:column; gap:28px;
+.login-content {
+  display:flex; flex-direction:column; align-items:center;
+  gap:24px; max-width:520px; width:100%;
 }
-.login-brand { display:flex; align-items:center; gap:14px; }
-.login-brand-flag { font-size:2.2rem; }
-.login-brand-text h1 {
-  font-size:1.5rem; font-weight:800; color:#fff;
-  letter-spacing:-0.02em; line-height:1.2;
-}
-.login-brand-text p { font-size:0.8rem; color:var(--muted); margin-top:4px; }
 
-/* Stats strip */
-.login-stats { display:flex; gap:20px; }
-.login-stat { text-align:center; }
-.login-stat-value { font-size:1.8rem; font-weight:800; color:#fff; line-height:1; }
-.login-stat-label { font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-top:3px; }
+/* Eyebrow label */
+.login-eyebrow {
+  font-size:0.6rem; text-transform:uppercase; letter-spacing:0.2em;
+  color:var(--accent); font-weight:600; opacity:0.8;
+}
+
+/* Title */
+.login-title { text-align:center; }
+.login-title h1 {
+  font-size:1.9rem; font-weight:800; color:#fff;
+  letter-spacing:-0.03em; line-height:1.15;
+}
+.login-title p {
+  font-size:0.75rem; color:var(--muted); margin-top:6px;
+  letter-spacing:0.06em;
+}
 
 /* Mini map */
 .mini-map-wrap {
-  background:rgba(255,255,255,0.02);
-  border:1px solid var(--border);
-  border-radius:12px; overflow:hidden;
-  position:relative;
+  background:rgba(255,255,255,0.015);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:14px; overflow:hidden;
+  position:relative; width:100%;
 }
 .mini-map-label {
   position:absolute; top:10px; left:12px;
-  font-size:0.6rem; text-transform:uppercase; letter-spacing:0.12em;
+  font-size:0.58rem; text-transform:uppercase; letter-spacing:0.12em;
   color:var(--muted); font-weight:600;
 }
 .mini-map-year {
@@ -85,81 +88,51 @@
 }
 #mini-map-svg { display:block; width:100%; }
 
-/* CR map panel */
-.cr-panel {
-  display:flex; align-items:center; gap:20px;
-  background:rgba(255,255,255,0.02);
-  border:1px solid var(--border); border-radius:12px;
-  padding:16px 20px;
+/* Login form — minimal, no card */
+.login-form {
+  width:100%; max-width:280px;
+  display:flex; flex-direction:column; gap:10px;
 }
-.cr-panel-text h3 { font-size:0.85rem; font-weight:700; color:#fff; }
-.cr-panel-text p  { font-size:0.68rem; color:var(--muted); margin-top:4px; line-height:1.5; }
 
-/* ── RIGHT PANEL (LOGIN CARD) ── */
-.login-card {
-  width:360px; flex-shrink:0;
-  background:rgba(19,21,30,0.95);
-  border:1px solid var(--border);
-  border-radius:20px;
-  padding:36px 32px;
-  box-shadow: 0 0 0 1px rgba(59,130,246,0.08), 0 32px 80px rgba(0,0,0,0.5);
-  backdrop-filter:blur(20px);
-}
-.card-logo {
-  width:48px; height:48px; border-radius:12px;
-  background:linear-gradient(135deg,#1d4ed8,#7c3aed);
-  display:flex; align-items:center; justify-content:center;
-  font-size:1.4rem; margin-bottom:20px;
-}
-.card-title { font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:6px; }
-.card-sub   { font-size:0.75rem; color:var(--muted); margin-bottom:28px; line-height:1.5; }
-
-.pwd-wrap { position:relative; margin-bottom:14px; }
+.pwd-wrap { position:relative; }
 .pwd-wrap input {
-  width:100%; background:rgba(255,255,255,0.04);
-  border:1px solid var(--border); border-radius:10px;
-  padding:13px 44px 13px 16px; color:#fff;
-  font-size:0.9rem; font-family:inherit; outline:none;
+  width:100%; background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1); border-radius:10px;
+  padding:12px 44px 12px 16px; color:#fff;
+  font-size:0.88rem; font-family:inherit; outline:none;
   transition:border-color 0.2s;
 }
 .pwd-wrap input:focus { border-color:var(--accent); }
 .pwd-wrap input::placeholder { color:var(--muted); }
 .pwd-toggle {
-  position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
   background:none; border:none; color:var(--muted); cursor:pointer;
-  font-size:1rem; padding:2px; line-height:1;
+  font-size:0.95rem; padding:2px; line-height:1;
 }
 .pwd-toggle:hover { color:var(--text); }
 
 .login-btn {
-  width:100%; padding:13px; border:none; border-radius:10px;
-  background:linear-gradient(135deg,var(--accent),#7c3aed);
-  color:#fff; font-size:0.9rem; font-weight:700; cursor:pointer;
+  width:100%; padding:12px; border:none; border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#6d28d9);
+  color:#fff; font-size:0.88rem; font-weight:700; cursor:pointer;
   transition:opacity 0.2s, transform 0.1s;
-  letter-spacing:0.03em;
+  letter-spacing:0.04em;
 }
-.login-btn:hover { opacity:0.92; }
+.login-btn:hover { opacity:0.88; }
 .login-btn:active { transform:scale(0.99); }
 
 .login-error {
-  color:var(--red); font-size:0.72rem; text-align:center;
-  margin-top:10px; height:16px; transition:opacity 0.2s;
-  opacity:0;
+  color:var(--red); font-size:0.7rem; text-align:center;
+  height:16px; transition:opacity 0.2s; opacity:0;
 }
 .login-error.visible { opacity:1; }
-
-.login-hint {
-  margin-top:20px; padding-top:18px; border-top:1px solid var(--border);
-  font-size:0.66rem; color:var(--muted); text-align:center; line-height:1.6;
-}
-.login-hint code { color:var(--accent); background:rgba(59,130,246,0.1); padding:1px 5px; border-radius:3px; font-family:monospace; }
 
 .shake { animation:shake 0.4s ease; }
 @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
 
 /* ── SKYLINE ── */
-.skyline-wrap { flex-shrink:0; height:90px; position:relative; z-index:1; }
-#skyline-svg { width:100%; height:90px; display:block; }
+.skyline-wrap { flex-shrink:0; height:80px; position:relative; z-index:1; }
+#skyline-svg { width:100%; height:80px; display:block; }
 
 /* ── TRANSITIONS ── */
 #login-screen { transition:opacity 0.5s ease; }
@@ -309,120 +282,50 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; h
 ════════════════════════════════════════ -->
 <div id="login-screen">
 
-  <!-- Main content -->
   <div class="login-body">
+    <div class="login-content">
 
-    <!-- LEFT: Info + mini map -->
-    <div class="login-left">
+      <!-- Eyebrow -->
+      <div class="login-eyebrow">Geografía Urbana · Investigación Doctoral</div>
 
-      <!-- Brand -->
-      <div class="login-brand">
-        <div class="login-brand-flag">🏙️</div>
-        <div class="login-brand-text">
-          <h1>Torres Residenciales<br>San José, Costa Rica</h1>
-          <p>Plataforma de investigación geográfica urbana</p>
-        </div>
+      <!-- Title -->
+      <div class="login-title">
+        <h1>Torres Residenciales<br>San José</h1>
+        <p>Costa Rica &nbsp;·&nbsp; 2005–2028</p>
       </div>
 
-      <!-- Stats strip -->
-      <div class="login-stats">
-        <div class="login-stat">
-          <div class="login-stat-value" id="ls-count">0</div>
-          <div class="login-stat-label">Torres registradas</div>
-        </div>
-        <div class="login-stat">
-          <div class="login-stat-value">2005</div>
-          <div class="login-stat-label">Año inicial</div>
-        </div>
-        <div class="login-stat">
-          <div class="login-stat-value">2028</div>
-          <div class="login-stat-label">Proyección</div>
-        </div>
-        <div class="login-stat">
-          <div class="login-stat-value">9+</div>
-          <div class="login-stat-label">Barrios</div>
-        </div>
-      </div>
-
-      <!-- Mini tower map (animated) -->
+      <!-- Animated mini map (hero) -->
       <div class="mini-map-wrap">
         <div class="mini-map-label">Distribución espacial · Gran Área Metropolitana</div>
         <div class="mini-map-year" id="mini-year">2005</div>
         <svg id="mini-map-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
-          <!-- Street grid (stylized) -->
           <rect width="320" height="180" fill="none"/>
           <line x1="0" y1="90" x2="320" y2="90" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
           <line x1="160" y1="0" x2="160" y2="180" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-          <!-- Río Torres (approx, west to east across the top third) -->
           <path d="M 0,55 C 40,52 80,58 120,54 C 160,50 200,56 240,52 C 280,48 310,50 320,48"
                 stroke="rgba(59,130,246,0.25)" stroke-width="2" fill="none"/>
-          <!-- Parque La Sabana (rect, west side) -->
           <rect x="58" y="68" width="20" height="14" rx="2" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.3)" stroke-width="1"/>
-          <!-- Zone labels -->
-          <text x="8" y="105" font-size="7" fill="rgba(255,255,255,0.2)" font-family="system-ui">Rohrmoser</text>
-          <text x="130" y="115" font-size="7" fill="rgba(255,255,255,0.2)" font-family="system-ui">Escalante</text>
+          <text x="8" y="105" font-size="7" fill="rgba(255,255,255,0.18)" font-family="system-ui">Rohrmoser</text>
+          <text x="130" y="115" font-size="7" fill="rgba(255,255,255,0.18)" font-family="system-ui">Escalante</text>
           <text x="60" y="80" font-size="6" fill="rgba(34,197,94,0.4)" font-family="system-ui">Sabana</text>
-          <text x="240" y="140" font-size="7" fill="rgba(255,255,255,0.2)" font-family="system-ui">Curridabat</text>
-          <!-- River label -->
+          <text x="240" y="140" font-size="7" fill="rgba(255,255,255,0.18)" font-family="system-ui">Curridabat</text>
           <text x="125" y="46" font-size="6" fill="rgba(59,130,246,0.4)" font-family="system-ui">Río Torres</text>
-          <!-- Tower dots drawn by JS -->
           <g id="mini-dots"></g>
         </svg>
       </div>
 
-      <!-- Costa Rica panel -->
-      <div class="cr-panel">
-        <svg width="90" height="70" viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
-          <!-- CR silhouette -->
-          <path d="M 42,14 L 68,7 L 102,6 L 138,10 L 162,22
-                   L 168,44 L 165,70 L 158,95 L 143,112
-                   L 115,122 L 82,120 L 55,112
-                   L 42,100 L 32,90 L 18,82 L 10,70
-                   L 14,58 L 26,63 L 36,75
-                   L 38,65 L 34,50 L 33,35 L 38,22 Z"
-                fill="rgba(59,130,246,0.12)" stroke="rgba(59,130,246,0.4)" stroke-width="1.5" stroke-linejoin="round"/>
-          <!-- Nicoya Peninsula -->
-          <path d="M 32,90 L 20,82 L 8,70 L 10,58 L 22,63 L 32,74 Z"
-                fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.3)" stroke-width="1"/>
-          <!-- San José dot (pulsing) -->
-          <circle cx="104" cy="78" r="4" fill="var(--accent)" opacity="0.9">
-            <animate attributeName="r" values="4;7;4" dur="2s" repeatCount="indefinite"/>
-            <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="104" cy="78" r="2.5" fill="white"/>
-          <!-- Other cities: Liberia, Limón, Cartago -->
-          <circle cx="30" cy="32" r="1.5" fill="rgba(255,255,255,0.4)"/>
-          <circle cx="162" cy="60" r="1.5" fill="rgba(255,255,255,0.4)"/>
-          <circle cx="118" cy="85" r="1.5" fill="rgba(255,255,255,0.4)"/>
-        </svg>
-        <div class="cr-panel-text">
-          <h3>🇨🇷 San José, Costa Rica</h3>
-          <p>El boom de torres residenciales en la Gran Área Metropolitana responde a un proceso de densificación urbana acelerado desde 2005, concentrado en Rohrmoser, Nunciatura, La Sabana y Escalante.</p>
+      <!-- Minimal login form -->
+      <div class="login-form">
+        <div class="pwd-wrap">
+          <input type="password" id="login-pwd" placeholder="Contraseña"
+                 onkeydown="if(event.key==='Enter') tryLogin()">
+          <button class="pwd-toggle" onclick="togglePwdVisibility()" title="Mostrar / ocultar">👁</button>
         </div>
+        <button class="login-btn" onclick="tryLogin()">Ingresar</button>
+        <div class="login-error" id="login-error">Contraseña incorrecta. Intentá de nuevo.</div>
       </div>
+
     </div>
-
-    <!-- RIGHT: Login card -->
-    <div class="login-card">
-      <div class="card-logo">🗺️</div>
-      <div class="card-title">Acceso al sistema</div>
-      <div class="card-sub">Plataforma de mapeo y gestión de datos de torres residenciales para investigación doctoral en geografía urbana.</div>
-
-      <div class="pwd-wrap">
-        <input type="password" id="login-pwd" placeholder="Contraseña de acceso"
-               onkeydown="if(event.key==='Enter') tryLogin()">
-        <button class="pwd-toggle" onclick="togglePwdVisibility()" title="Mostrar / ocultar">👁</button>
-      </div>
-
-      <button class="login-btn" onclick="tryLogin()">Ingresar →</button>
-      <div class="login-error" id="login-error">Contraseña incorrecta. Intentá de nuevo.</div>
-
-      <div class="login-hint">
-        Contraseña por defecto: <code>torres2025</code><br>
-        Podés cambiarla desde el panel principal.
-      </div>
-    </div>
-
   </div>
 
   <!-- Building skyline -->
@@ -824,7 +727,7 @@ function startMiniMapAnimation() {
 
   const g = document.getElementById('mini-dots');
   const yearEl = document.getElementById('mini-year');
-  const countEl = document.getElementById('ls-count');
+
 
   let i = 0;
   let dots = [];
@@ -867,7 +770,6 @@ function startMiniMapAnimation() {
     dots.push(circle);
 
     if (t.year) yearEl.textContent = t.year;
-    countEl.textContent = dots.length;
     i++;
   }
 
